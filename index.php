@@ -24,6 +24,11 @@ if ($isFormSubmitted) {
     $activeCharSets = [$charSets['letters'], $charSets['numbers'], $charSets['symbols']];
 
     $password = generatePassword((int) $passlength, $activeCharSets);
+
+    $_SESSION['password'] = $password;
+
+    header('Location: result.php');
+    exit();
   }
 }
 
@@ -93,7 +98,7 @@ $hasErrors = !empty($errors);
         </div>
       <?php } ?>
 
-      <?php if ($password !== ''): ?>
+     <!--  <?php if ($password !== ''): ?>
         <div class="alert alert-success" role="alert">
           La tua password è: <strong><?= htmlspecialchars(
             $password,
@@ -101,7 +106,7 @@ $hasErrors = !empty($errors);
             'UTF-8',
           ) ?></strong>
         </div>
-      <?php endif; ?>
+      <?php endif; ?> -->
 
       <div class="card form-card">
         <div class="card-body">
