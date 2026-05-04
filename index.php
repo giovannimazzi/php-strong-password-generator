@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 require_once __DIR__ . '/functions.php';
@@ -6,12 +7,15 @@ require_once __DIR__ . '/functions.php';
 $passlength = '';
 $password = '';
 $errors = [];
-$isFormSubmitted = !empty($_GET);
+$selectedCharSets = [];
+$allowRepeats = 'yes';
 
-$charSets = getCharSets();
+$isFormSubmitted = !empty($_GET);
 
 if ($isFormSubmitted) {
   $passlength = $_GET['passlength'] ?? '';
+  $selectedCharSets = $_GET['charsets'] ?? [];
+  $allowRepeats = $_GET['repeat'] ?? 'yes';
 
   if ($passlength === '') {
     $errors[] = 'Inserisci la lunghezza della password.';
@@ -21,15 +25,35 @@ if ($isFormSubmitted) {
     $errors[] = 'La lunghezza deve essere maggiore di zero.';
   }
 
+  if (empty($selectedCharSets)) {
+    $errors[] = 'Seleziona almeno un tipo di carattere.';
+  }
+
+  if (!in_array($allowRepeats, ['yes', 'no'])) {
+    $errors[] = 'Scelta ripetizioni non valida.';
+  }
+
   if (empty($errors)) {
-    $activeCharSets = [$charSets['letters'], $charSets['numbers'], $charSets['symbols']];
+    $charSets = getCharSets();
+    $activeCharSets = [];
 
-    $password = generatePassword((int) $passlength, $activeCharSets);
+    foreach ($selectedCharSets as $selectedCharSet) {
+      if (isset($charSets[$selectedCharSet])) {
+        $activeCharSets[] = $charSets[$selectedCharSet];
+      }
+    }
 
-    $_SESSION['password'] = $password;
+    $password = generatePassword((int) $passlength, $activeCharSets, $allowRepeats === 'yes');
 
-    header('Location: result.php');
-    exit();
+    if ($password === false) {
+      $errors[] =
+        'La lunghezza richiesta è troppo alta per i caratteri selezionati senza ripetizioni.';
+    } else {
+      $_SESSION['password'] = $password;
+
+      header('Location: result.php');
+      exit();
+    }
   }
 }
 
@@ -126,6 +150,67 @@ $hasErrors = !empty($errors);
                   name="passlength" 
                   id="passlength" 
                   value="<?php echo $passlength; ?>">
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-7">
+                <span>Consenti ripetizioni di uno o più caratteri:</span>
+              </div>
+
+              <div class="col-5">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="repeat" id="repeatYes" value="yes" <?= $allowRepeats ===
+                  'yes'
+                    ? 'checked'
+                    : '' ?>>
+                  <label class="form-check-label" for="repeatYes">Sì</label>
+                </div>
+
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="repeat" id="repeatNo" value="no" <?= $allowRepeats ===
+                  'no'
+                    ? 'checked'
+                    : '' ?>>
+                  <label class="form-check-label" for="repeatNo">No</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-7">
+                <span>Caratteri consentiti:</span>
+              </div>
+
+              <div class="col-5">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="charsets[]" value="letters" id="letters" <?= in_array(
+                    'letters',
+                    $selectedCharSets,
+                  )
+                    ? 'checked'
+                    : '' ?>>
+                  <label class="form-check-label" for="letters">Lettere</label>
+                </div>
+
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="charsets[]" value="numbers" id="numbers" <?= in_array(
+                    'numbers',
+                    $selectedCharSets,
+                  )
+                    ? 'checked'
+                    : '' ?>>
+                  <label class="form-check-label" for="numbers">Numeri</label>
+                </div>
+
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="charsets[]" value="symbols" id="symbols" <?= in_array(
+                    'symbols',
+                    $selectedCharSets,
+                  )
+                    ? 'checked'
+                    : '' ?>>
+                  <label class="form-check-label" for="symbols">Simboli</label>
+                </div>
               </div>
             </div>
             <div class="d-flex gap-2 mt-2">

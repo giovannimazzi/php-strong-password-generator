@@ -32,7 +32,7 @@ function getCharSets()
   ];
 }
 
-function generatePassword($length, $activeCharSets)
+function generatePassword($length, $activeCharSets, $allowRepeats = true)
 {
   $passwordChars = [];
   $availableChars = [];
@@ -41,9 +41,17 @@ function generatePassword($length, $activeCharSets)
     $availableChars = array_merge($availableChars, $charSet);
   }
 
+  if (!$allowRepeats && $length > count($availableChars)) {
+    return false;
+  }
+
   for ($i = 0; $i < $length; $i++) {
     $randomIndex = random_int(0, count($availableChars) - 1);
     $passwordChars[] = $availableChars[$randomIndex];
+
+    if (!$allowRepeats) {
+      array_splice($availableChars, $randomIndex, 1);
+    }
   }
 
   return implode('', $passwordChars);
